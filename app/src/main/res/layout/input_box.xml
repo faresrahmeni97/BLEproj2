@@ -5,37 +5,10 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-    <TextView
-        android:id="@+id/txtmessage"
+    <ListView
+        android:id="@+id/listView"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:padding="10dp"
-        android:textSize="16sp"
-        />
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:layout_gravity="center_horizontal"
-        >
-        <EditText
-            android:id="@+id/txtinput"
-            android:layout_width="100dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="2"
-            />
-        <Button
-            android:id="@+id/btdone"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Modifier"
-            android:layout_weight="1"
-            />
-        <Button
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="Supprimer"
-            android:id="@+id/btdel"/>
+        android:layout_height="192dp">
 
-    </LinearLayout>
+    </ListView>
 </LinearLayout>

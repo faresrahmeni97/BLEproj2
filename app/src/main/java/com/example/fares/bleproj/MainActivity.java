@@ -4,11 +4,15 @@ import android.app.Dialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.graphics.Color;
+import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
@@ -24,76 +28,107 @@ import java.util.List;
 import java.util.Set;
 
 public class MainActivity extends AppCompatActivity {
+    private static final String TAG = "MainActivity";
+    BluetoothAdapter mBluetoothAdapter;
+    ListView lv;
+    private ArrayList<BluetoothDevice> items = new ArrayList<>();
+    private DeviceListAdapter mDeviceListAdapter;
+    //
+    private ListView pairedListView;
+    private ArrayList<BluetoothDevice> paireditems = new ArrayList<>();
 
-    ArrayAdapter<String> adapter;
-    EditText editText;
-    ArrayList<String> itemList;
+
+    //----------------------------------------receiver---------
+    private final BroadcastReceiver mBroadcastReceiver3 = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice device = intent
+                        .getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                items.add(device);
+                Log.i("BT", device.getName() + "\n" + device.getAddress());
+                lv.setAdapter(new DeviceListAdapter(context, R.layout.device_adapter_view, items));
+            }
+        }
+    };
+    private final BroadcastReceiver mPairedReceiver = new BroadcastReceiver() {
+        public void onReceive(Context context, Intent intent) {
+            String action = intent.getAction();
+            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
+                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
+                Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+                for(BluetoothDevice bt : pairedDevices)
+                {paireditems.add(bt);
+                    Toast.makeText(getApplicationContext(),bt.getName(),Toast.LENGTH_SHORT).show();}
+                Log.i("BT", device.getName() + "\n" + device.getAddress());
+                pairedListView.setAdapter(new DeviceListAdapter (context,
+                        R.layout.device_adapter_view, paireditems));
+            }
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-        String[] items={"Apple","Banana","Clementine"};
-        itemList=new ArrayList<String>(Arrays.asList(items));
-        adapter=new ArrayAdapter<String>(this,R.layout.list_item,R.id.txtview,itemList);
-        ListView listV=(ListView)findViewById(R.id.list);
-        listV.setAdapter(adapter);
-        editText=(EditText)findViewById(R.id.txtInput);
+        lv = (ListView) findViewById(R.id.listView);
         Button btAdd=(Button)findViewById(R.id.btAdd);
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
         btAdd.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                String newItem=editText.getText().toString();
-                // add new item to arraylist
-                itemList.add(newItem);
-                // notify listview of data changed
-                adapter.notifyDataSetChanged();
+                showInputBox();
             }
-
         });
-        listV.setOnItemClickListener(new AdapterView.OnItemClickListener() {
-
-            @Override
-            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // Show input box
-                showInputBox(itemList.get(position),position);
-            }
-
-        });
+        pairedListView =  findViewById(R.id.pairedevice);
+        mBluetoothAdapter.startDiscovery();
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mPairedReceiver, filter);
 
 
     }
-    public void showInputBox(String oldItem, final int index){
+    public void showInputBox(){
+
         final Dialog dialog=new Dialog(MainActivity.this);
-        dialog.setTitle("Input Box");
+        dialog.setTitle("Scan");
         dialog.setContentView(R.layout.input_box);
-        TextView txtMessage=(TextView)dialog.findViewById(R.id.txtmessage);
-        txtMessage.setText("Update item");
-        txtMessage.setTextColor(Color.parseColor("#ff2222"));
-        final EditText editText=(EditText)dialog.findViewById(R.id.txtinput);
-        editText.setText(oldItem);
-        Button bt=(Button)dialog.findViewById(R.id.btdone);
-        Button btdel=(Button)dialog.findViewById(R.id.btdel);
-        bt.setOnClickListener(new View.OnClickListener() {
+        lv = (ListView )dialog.findViewById(R.id.listView);
+        mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
+        mBluetoothAdapter.startDiscovery();
+        IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
+        registerReceiver(mBroadcastReceiver3, filter);
+        lv.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                mBluetoothAdapter.cancelDiscovery();
+
+                Log.d(TAG, "onItemClick: You Clicked on a device.");
+                String deviceName = items.get(position).getName();
+                String deviceAddress = items.get(position).getAddress();
+
+                Log.d(TAG, "onItemClick: deviceName = " + deviceName);
+                Log.d(TAG, "onItemClick: deviceAddress = " + deviceAddress);
+
+                //create the bond.
+                //NOTE: Requires API 17+? I think this is JellyBean
+                if(Build.VERSION.SDK_INT > Build.VERSION_CODES.JELLY_BEAN_MR2){
+                    Log.d(TAG, "Trying to pair with " + deviceName);
+                    items.get(position).createBond();
+
+                    dialog.dismiss();
+                    Toast.makeText(getApplicationContext(),deviceName +" est Associer",Toast.LENGTH_SHORT).show();
+                }
+            }
+        });
+/*        lv.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                itemList.set(index,editText.getText().toString());
+
                 adapter.notifyDataSetChanged();
                 dialog.dismiss();
                 Toast.makeText(getApplicationContext(),"Modification Valider",Toast.LENGTH_SHORT).show();
             }
-        });
-
-
-        btdel.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View v) {
-                itemList.remove(index);
-                adapter.notifyDataSetChanged();
-                dialog.dismiss();
-                Toast.makeText(getApplicationContext(),"Suppression Valider",Toast.LENGTH_SHORT).show();
-            }
-        });
-
+        });*/
         dialog.show();
     }
 
