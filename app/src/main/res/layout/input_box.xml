@@ -5,10 +5,9 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical">
-    <ListView
-        android:id="@+id/listView"
+    <Button
         android:layout_width="match_parent"
-        android:layout_height="192dp">
-
-    </ListView>
+        android:layout_height="wrap_content"
+        android:id="@+id/btdel"
+        android:text="Supprimer"/>
 </LinearLayout>
