@@ -5,20 +5,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".DeviceActivity">
-<LinearLayout
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:orientation="vertical">
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/nom"
-        android:text="Name"/>
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/ad"
-        android:text="Adresse"/>
-</LinearLayout>
+
 
 </android.support.constraint.ConstraintLayout>

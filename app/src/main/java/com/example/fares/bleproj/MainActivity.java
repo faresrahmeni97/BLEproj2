@@ -37,34 +37,16 @@ public class MainActivity extends AppCompatActivity {
     BluetoothAdapter mBluetoothAdapter;
     SwipeRefreshLayout swipeRefreshLayout;
     DeviceListAdapter deviceListAdapter;
-    private ListView pairedListView;
-    private ArrayList<BluetoothDevice> paireditems = new ArrayList<>();
+        private ListView pairedListView;
+        private ArrayList<BluetoothDevice> paireditems = new ArrayList<>();
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if(requestCode == RES){
-
-        deviceListAdapter.notifyDataSetChanged();
+        loadPairedDevices();
         }
     }
-
-//----------------------------------------receiver---------
-
-    private final BroadcastReceiver mPairedReceiver = new BroadcastReceiver() {
-        public void onReceive(Context context, Intent intent) {
-            String action = intent.getAction();
-                paireditems.clear();
-            if (BluetoothDevice.ACTION_FOUND.equals(action)) {
-                BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-                Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
-                for(BluetoothDevice bt : pairedDevices)
-                paireditems.add(bt);
-                Log.i("BT", device.getName() + "\n" + device.getAddress());
-                pairedListView.setAdapter(deviceListAdapter);
-            }
-        }
-    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -103,12 +85,16 @@ public class MainActivity extends AppCompatActivity {
 
 
 public void loadPairedDevices(){
-    pairedListView =  findViewById(R.id.pairedevice);
+    deviceListAdapter = new DeviceListAdapter(getApplicationContext(),R.layout.device_adapter_view,paireditems);
+    pairedListView = findViewById(R.id.pairedevice);
     mBluetoothAdapter = BluetoothAdapter.getDefaultAdapter();
     mBluetoothAdapter.startDiscovery();
-
-    IntentFilter filter = new IntentFilter(BluetoothDevice.ACTION_FOUND);
-    registerReceiver(mPairedReceiver, filter);
+    paireditems.clear();
+    Set<BluetoothDevice> pairedDevices = mBluetoothAdapter.getBondedDevices();
+    // There are paired devices. Get the name and address of each paired device.
+    if (pairedDevices.size() > 0) for (BluetoothDevice device : pairedDevices)
+        paireditems.add(device);
+    pairedListView.setAdapter(deviceListAdapter);
     pairedListView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
         @Override
         public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
